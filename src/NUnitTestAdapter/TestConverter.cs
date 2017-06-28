@@ -199,6 +199,27 @@ namespace NUnit.VisualStudio.TestAdapter
             if (outputNode != null)
                 vsResult.Messages.Add(new TestResultMessage(TestResultMessage.StandardOutCategory, outputNode.InnerText));
 
+            var attachments = resultNode.SelectSingleNode("attachments");
+            if (attachments != null)
+            {
+                var attachmentSet = new AttachmentSet(new Uri(NUnit3TestExecutor.ExecutorUri), "attachments");
+                foreach (XmlNode attachment in attachments.ChildNodes)
+                {
+                    if (!string.Equals(attachment.Name, "attachment"))
+                        continue;
+
+                    var path = attachment.InnerText;
+                    var description = attachment?.SelectSingleNode("description")?.InnerText;
+
+                    // TODO: Handle relatve path in some way Add try/catch ?
+                    // or ignore with warning
+                    attachmentSet.Attachments.Add(new UriDataAttachment(new Uri(path), description));
+                }
+
+                if (attachmentSet.Attachments.Count > 0)
+                    vsResult.Attachments.Add(attachmentSet);
+            }
+
             return vsResult;
         }
 
